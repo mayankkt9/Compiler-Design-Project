@@ -20,7 +20,7 @@ brackets(t_brk(X)) --> ['('], expr(X), [')'].
 brackets(X) --> num(X).
 brackets(X) --> identifier(X).
 
-identifier(t_identifier(X)) -->[X], {atom(X)}.
+identifier(t_identifier(X)) -->[X],{X \= true}, {X \= false}, {atom(X)}.
 num(t_num(X)) --> [X], {number(X)}.
 
 
@@ -58,11 +58,16 @@ ternary_op(t_ternary(X, Y, Z)) --> bool(X), [?], expr(Y), [:], expr(Z).
 
 % Declaration statements
 declaration(t_declaration_bool_assign(X, Y)) --> [boolean], identifier(X), [=], bool(Y).
-declaration(t_declaration_str_assign(X, Y)) --> [string], identifier(X), [=], [Y], {atom(Y)}.
+declaration(t_declaration_str_assign(X, Y)) --> [string], identifier(X), [=], ['"'], [Y], ['"'].
 declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], expr(Y).
 declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], ternary_op(Y).
 declaration(t_declaration_identifier(X)) --> data_type, identifier(X).
 
+% Assignment statements
+assignment(t_assignment_bool(X, Y)) --> identifier(X), [=], bool(Y).
+assignment(t_assignment_str(X, Y)) --> identifier(X), [=], ['"'], [Y], ['"'].
+assignment(t_assignment_num(X, Y)) --> identifier(X), [=], expr(Y).
+assignment(t_assignment_num(X, Y)) --> identifier(X), [=], ternary_op(Y).
 
 % Need to implement print statement
 printv(t_print_id(X)) --> [X].
@@ -89,14 +94,9 @@ new_for(t_for_new(W, X, Y, Z)) --> [for], identifier(W), [in], [range] ,['('], n
     							[,], num(Y), ['{'], command(Z), ['}'].
 
 
-assign_statement(t_bool_assign(X, Y)) --> data_type, identifier(X), [=], bool(Y).
-assign_statement(t_str_assign(X, Y)) --> data_type, [=], [Y], {atom(Y)}.
-assign_statement(t_num_assign(X, Y)) --> identifier(X), [=], expr(Y).
-assign_statement(t_num_assign(X, Y)) --> identifier(X), [=], ternary_op(Y).
-
 % General Statements and While loop
 statement(t_statement_declaration(X)) --> declaration(X).
-statement(t_statement_assign(X)) --> assign_statement(X).
+statement(t_statement_assign(X)) --> assignment(X).
 statement(t_statement_print(X)) --> [print], ['('] , printv(X), [')'].
 statement(t_statement_iflese(X, Y, Z)) --> if_stmt(X), elif_stmt(Y), else_stmt(Z).
 statement(t_statement_while(X, Y)) --> [while], ['('], bool(X), [')'], ['{'], command(Y), ['}'].
