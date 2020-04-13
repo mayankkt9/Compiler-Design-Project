@@ -1,0 +1,1 @@
+trace, (program(P, [start,string,b,=,'"',true,'"',b,=,'"',sdghsd,'"',end], [])).
