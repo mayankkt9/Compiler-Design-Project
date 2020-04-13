@@ -143,8 +143,16 @@ eval_statement(t_statement_iflese(_, _, t_elifstmt(X)), Env, FinalEnv) :-
 
 eval_statement(t_statement_iflese(_, _, t_elifstmt()), Env, Env) :- true.
 
-% Need to implement
-% eval_statement(t_statement_for(X)) --> conventional_for(X) | new_for(X).
+% Need to check for loop
+eval_statement(t_conventional_for(A,B,C,D,E,F), Env, FinalEnv) :- eval_expr(B, Env, Env1, Val), 
+    update(A, Val, Env1, Env2), eval_for_statement(t_conventional_for(A,B,C,D,E,F), Env2, FinalEnv).
+eval_for_statement(t_conventional_for(A,B,C,D,E,F), Env, FinalEnv) :- eval_bool(t_bool(A, C, D), Env, Env1, true), 
+    eval_command(F, Env1, Env2), eval_expr(E, Env2, Env3, Val), update(A, Val, Env3, Env4),
+    eval_for_statement(t_conventional_for(A,B,C,D,E,F), Env4, FinalEnv).
+eval_for_statement(t_conventional_for(A,B,C,D,E,F), Env, Env) :- eval_bool(t_bool(A, C, D), Env, Env1, false).
+
+eval_statement(t_new_for(A,B,C,D), Env, FinalEnv) :- 
+    eval_statement(t_conventional_for(A,B,t_comp_op(<),C, t_assign(A, t_add(A, t_num(1))),D), Env, FinalEnv).
 
 % Evaluate Command
 eval_command(t_command(), Env, Env).

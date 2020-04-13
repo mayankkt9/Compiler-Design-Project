@@ -85,14 +85,12 @@ else_stmt(t_elsefstmt()) --> [].
 
 
 % for loops
-conventional_for(t_for_conv(U, V, W, X, Y, Z)) --> [for], identifier(U), [=], expr(V), [;],
-    						identifier(U), comparison_operator(W), expr(X), [;],
-    						identifier(U), [=], expr(Y),
-    						['{'], command(Z), ['}'].
+conventional_for(t_conventional_for(A,B,C,D,E,F)) --> [for], ['('], identifier(A), [=], expr(B), [;], 
+    identifier(A), comparison_operator(C), expr(D), [;], 
+    identifier(A), [=], expr(E), [')'], ['{'], command(F), ['}'].
 
-new_for(t_for_new(W, X, Y, Z)) --> [for], identifier(W), [in], [range] ,['('], num(X),
-    							[,], num(Y), ['{'], command(Z), ['}'].
-
+new_for(t_new_for(A,B,C,D)) --> [for], identifier(A), [in], 
+    [range], ['('], num(B), [,], num(C), [')'], ['{'], command(D), ['}'].
 
 % General Statements and While loop
 statement(t_statement_declaration(X)) --> declaration(X).
