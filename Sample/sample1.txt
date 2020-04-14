@@ -1,1 +1,37 @@
 trace, (program(P, [start,string,b,=,'"',true,'"',b,=,'"',sdghsd,'"',end], [])).
+1)
+start
+    int x = 1
+    if(x > 0) {
+        x = 2
+    }
+end
+
+program(P, [start,int,x,=,1,if,'(',x,>,0,')','{',x,=,2,'}',elif,'(',x,==,0,')','{',x,=,3,'}',
+             elif,'(',x,==,-1,')','{',x,=,3,'}',else,'{',x,=,5,'}',end], []).
+
+2)
+
+program(P, [start,int,x,=,1,while,'(',x, ==, 1,')','{',x,=,9,'}',end], []).
+
+3)
+start
+    int x = 1
+    int y = 5
+    int z = x == y ? x : y
+end
+
+program(P, [start,int,x,=,1,int,y,=,5,int,z,=,x,==,y,?,x,*,2,:,y,+,5,end], []).
+
+4)
+start
+    for(i = 0; i < 5; i = i + 1) {
+        print(i)
+        print("Hello)
+    }
+    for i in range(0,5) {
+        print("Hello")
+        print(i)
+    }
+end
+trace, (program(P, [start,for,'(',i,=,0,;,i,<,5,;,i,=,i,+,1,')','{',print,'(',i,')',print,'(','"',Hello,'"',')','}',for,i,in,range,'(',0,,,5,')','{',print,'(','"',Hello,'"',')',print,'(',i,')','}',end], [])).
