@@ -1,4 +1,4 @@
-%:- use_rendering(svgtree).
+:- use_rendering(svgtree).
 
 :- table expr_op/3, term/3, bool/3.
 
@@ -16,7 +16,7 @@ term(t_div(X, Y))-->term(X), [/], brackets(Y).
 term(t_mul(X, Y)) --> term(X), [*], brackets(Y).
 term(X) --> brackets(X).
 
-brackets(t_brk(X)) --> ['('], expr(X), [')'].
+brackets(X) --> ['('], expr(X), [')'].
 brackets(X) --> num(X).
 brackets(X) --> identifier(X).
 
@@ -37,8 +37,8 @@ boolean_operator(t_bool_op_or(or))  --> [or].
 
 
 % Boolena Operations
-bool(t_fbool(false))-->[false].
-bool(t_tbool(true))--> [true].
+bool(false)-->[false].
+bool(true)--> [true].
 bool(t_notbool(not, X))--> [not], bool(X).
 bool(t_bool(X,Y,Z))--> expr(X), comparison_operator(Y), expr(Z).
 bool(t_bool_operation(X, Y, Z)) --> bool(X), boolean_operator(Y), bool(Z).
@@ -96,7 +96,7 @@ new_for(t_new_for(A,B,C,D)) --> [for], identifier(A), [in],
 statement(t_statement_declaration(X)) --> declaration(X).
 statement(t_statement_assign(X)) --> assignment(X).
 statement(t_statement_print(X)) --> [print], ['('] , printv(X), [')'].
-statement(t_statement_iflese(X, Y, Z)) --> if_stmt(X), elif_stmt(Y), else_stmt(Z).
+statement(t_statement_ifelse(X, Y, Z)) --> if_stmt(X), elif_stmt(Y), else_stmt(Z).
 statement(t_statement_while(X, Y)) --> [while], ['('], bool(X), [')'], ['{'], command(Y), ['}'].
 statement(t_statement_for(X)) --> conventional_for(X).
 statement(t_statement_for(X)) --> new_for(X).
@@ -121,22 +121,27 @@ program(t_program(X))-->block(X).
 
 
 % Update Environment
-update(K, V, [], [(K,V)]).
+update(K, V, Type, [], [(K, V, Type)]).
 
-update(K, V, [(K,_)|T], [(K,V)|T]).
+update(K, V, Type, [(K, _, _)|T], [(K, V, Type)|T]).
 
-update(K, V, [H|T], [H|R]) :- update(K,V, T, R).
+update(K, V, Type, [H|T], [H|R]) :- update(K, V, Type, T, R).
 
 
 % Lookup Value in Environment
-lookup(K, [(K,V)|_], V).
+lookup(K, [], _, _) :- write("Variable not initialised. Please check."), fail.
 
-lookup(K, [_|T], V) :- lookup(K, T, V).
+lookup(K, [(K,V,Type)|_], V, Type).
+
+lookup(K, [_|T], V, Type) :- lookup(K, T, V, Type).
 
 
 % Evaluate Expression
-eval_expr(t_assign(t_Id(X), Y), Env, FinalEnv, Val):- eval_expr(Y, Env, Env1, Val),
-    										update(X, Val, Env1, FinalEnv).
+eval_expr(t_assign(t_Id(X), Y), Env, FinalEnv, Val):- lookup(X, Env, _, num),
+    eval_expr(Y, Env, Env1, Val), update(X, Val, num, Env1, FinalEnv).
+
+eval_expr(t_assign(t_Id(X), _Y), Env, _FinalEnv, _Val):- lookup(X, Env, _, Type),
+    Type \= num, write("This operation can only be perfomed on num type of variable. Please check."), fail.
 
 eval_expr(t_add(X, Y), Env, FinalEnv, Val):- eval_expr(X, Env, Env1, V1),
                                              eval_expr(Y, Env1, FinalEnv, V2),
@@ -154,22 +159,21 @@ eval_expr(t_mul(X, Y), Env, FinalEnv, Val):- eval_expr(X, Env, Env1, V1),
                                              eval_expr(Y, Env1, FinalEnv, V2),
     							   			 Val is V1 * V2.
 
-eval_expr(t_brk(X), Env, FinalEnv, Val):- eval_expr(X, Env, FinalEnv, Val).
-
 eval_expr(X, Env, Env, X) :- number(X).
 
-eval_expr(X, Env, Env, Val):- lookup(X, Env, Val).
+eval_expr(X, Env, Env, Val):- lookup(X, Env, Val, num).
 
-
+eval_expr(X, Env, Env, Val):- lookup(X, Env, Val, Type), Type \= num,
+    write("This operation can only be perfomed on num type of variable. Please check."), fail.
 
 % Evaluate Boolean Expression
 not(true, false).
 
 not(false, true).
 
-eval_bool(t_fbool(false), Env, Env, false).
+eval_bool(false, Env, Env, false).
 
-eval_bool(t_tbool(true), Env, Env, true).
+eval_bool(true, Env, Env, true).
 
 eval_bool(t_notbool(not, X), Env, FinalEnv, Val) :- eval_bool(X, Env, FinalEnv, V1), not(V1, Val).
 
@@ -209,7 +213,6 @@ eval_bool_operator(t_bool_op_or(or),true,false,true).
 eval_bool_operator(t_bool_op_or(or),true,true,true).
 
 
-
 % Evaluate Ternary Statement
 eval_ternary(t_ternary(X, Y, _), Env, FinalEnv, Val) :- eval_bool(X, Env, Env1, true),
     eval_expr(Y, Env1, FinalEnv, Val).
@@ -244,24 +247,24 @@ eval_statement(t_statement_while(X,Y), Env, FinalEnv):- eval_bool(X, Env, Env1, 
 
 eval_statement(t_statement_while(X,_), Env, FinalEnv):- eval_bool(X, Env, FinalEnv, false).
 
-eval_statement(t_statement_iflese(t_ifstmt(X, Y), _, _), Env, FinalEnv) :-
+eval_statement(t_statement_ifelse(t_ifstmt(X, Y), _, _), Env, FinalEnv) :-
     eval_bool(X, Env, Env1, true), eval_command(Y, Env1, FinalEnv).
     
-eval_statement(t_statement_iflese(_, t_elifstmt(X, Y, _), _), Env, FinalEnv) :-
+eval_statement(t_statement_ifelse(_, t_elifstmt(X, Y, _), _), Env, FinalEnv) :-
     eval_bool(X, Env, Env1, true), eval_command(Y, Env1, FinalEnv).
 
-eval_statement(t_statement_iflese(_, t_elifstmt(X, _, Z), _), Env, FinalEnv) :-
+eval_statement(t_statement_ifelse(_, t_elifstmt(X, _, Z), _), Env, FinalEnv) :-
     eval_bool(X, Env, Env1, false), eval_statement(Z, Env1, FinalEnv).
 
 eval_statement(t_statement_assign(X), Env, FinalEnv) :- eval_declaration(X, Env, FinalEnv).
 
 % Need to check
-eval_statement(t_statement_iflese(_, t_elifstmt(), _), Env, Env) :- false.
+eval_statement(t_statement_ifelse(_, t_elifstmt(), _), Env, Env) :- false.
 
-eval_statement(t_statement_iflese(_, _, t_elifstmt(X)), Env, FinalEnv) :- 
+eval_statement(t_statement_ifelse(_, _, t_elifstmt(X)), Env, FinalEnv) :- 
     eval_command(X, Env, FinalEnv).
 
-eval_statement(t_statement_iflese(_, _, t_elifstmt()), Env, Env) :- true.
+eval_statement(t_statement_ifelse(_, _, t_elifstmt()), Env, Env) :- true.
 
 % Need to check for loop
 eval_statement(t_new_for(A,B,C,D), Env, FinalEnv) :- 

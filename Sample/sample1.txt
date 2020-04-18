@@ -1,4 +1,4 @@
-trace, (program(P, [start,string,b,=,'"',true,'"',b,=,'"',sdghsd,'"',end], [])).
+program(P, [start,string,b,=,'"',true,'"',b,=,'"',sdghsd,'"',end], []).
 1)
 start
     int x = 1
