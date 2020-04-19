@@ -16,12 +16,12 @@ term(t_div(X, Y))-->term(X), [/], brackets(Y).
 term(t_mul(X, Y)) --> term(X), [*], brackets(Y).
 term(X) --> brackets(X).
 
-brackets(t_brk(X)) --> ['('], expr(X), [')'].
+brackets(X) --> ['('], expr(X), [')'].
 brackets(X) --> num(X).
 brackets(X) --> identifier(X).
 
-identifier(t_identifier(X)) -->[X],{X \= true}, {X \= false}, {atom(X)}.
-num(t_num(X)) --> [X], {number(X)}.
+identifier(X) -->[X],{X \= true}, {X \= false}, {atom(X)}.
+num(X) --> [X], {number(X)}.
 
 
 % 4 data types
@@ -37,8 +37,8 @@ boolean_operator(t_bool_op_or(or))  --> [or].
 
 
 % Boolena Operations
-bool(t_fbool(false))-->[false].
-bool(t_tbool(true))--> [true].
+bool(false)-->[false].
+bool(true)--> [true].
 bool(t_notbool(not, X))--> [not], bool(X).
 bool(t_bool(X,Y,Z))--> expr(X), comparison_operator(Y), expr(Z).
 bool(t_bool_operation(X, Y, Z)) --> bool(X), boolean_operator(Y), bool(Z).
@@ -61,13 +61,14 @@ declaration(t_declaration_bool_assign(X, Y)) --> [boolean], identifier(X), [=], 
 declaration(t_declaration_str_assign(X, Y)) --> [string], identifier(X), [=], ['"'], [Y], ['"'].
 declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], expr(Y).
 declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], ternary_op(Y).
-declaration(t_declaration_identifier(X)) --> data_type, identifier(X).
+declaration(t_declaration_num_assign(X, Y)) --> [float], identifier(X), [=], expr(Y).
+declaration(t_declaration_num_assign(X, Y)) --> [float], identifier(X), [=], ternary_op(Y).
 
 % Assignment statements
 assignment(t_assignment_bool(X, Y)) --> identifier(X), [=], bool(Y).
 assignment(t_assignment_str(X, Y)) --> identifier(X), [=], ['"'], [Y], ['"'].
-assignment(t_assignment_num(X, Y)) --> identifier(X), [=], expr(Y).
-assignment(t_assignment_num(X, Y)) --> identifier(X), [=], ternary_op(Y).
+assignment(t_declaration_num_assign(X, Y)) --> identifier(X), [=], expr(Y).
+assignment(t_declaration_num_assign(X, Y)) --> identifier(X), [=], ternary_op(Y).
 
 % Need to implement print statement
 printv(t_print_id(X)) --> [X].
@@ -96,9 +97,10 @@ new_for(t_new_for(A,B,C,D)) --> [for], identifier(A), [in],
 statement(t_statement_declaration(X)) --> declaration(X).
 statement(t_statement_assign(X)) --> assignment(X).
 statement(t_statement_print(X)) --> [print], ['('] , printv(X), [')'].
-statement(t_statement_iflese(X, Y, Z)) --> if_stmt(X), elif_stmt(Y), else_stmt(Z).
+statement(t_statement_ifelse(X, Y, Z)) --> if_stmt(X), elif_stmt(Y), else_stmt(Z).
 statement(t_statement_while(X, Y)) --> [while], ['('], bool(X), [')'], ['{'], command(Y), ['}'].
-statement(t_statement_for(X)) --> conventional_for(X) | new_for(X).
+statement(t_statement_for(X)) --> conventional_for(X).
+statement(t_statement_for(X)) --> new_for(X).
 
 
 % Command List and single command is called statement.
