@@ -15,7 +15,7 @@ def lexer_job():
 		ascii = reduce(lambda x, y: str(x)+str(y), map(ord,str1[i]))
 		# print(str1[i]+ " "+str(ascii))
 		if i>1 and str1[i]=='=' and str1[i-1]==':':
-			continue;
+			continue
 		if str1[i]==':' and str1[i+1]=='=':
 			lex+=str1[i]+str1[i+1]
 			i+=2
@@ -41,27 +41,31 @@ def lexer_job():
 	return lex
 
 def create_parse_tree(lex):
+
 	prolog.consult("semantics.pl")
-	query1 = "program(P,"+lex+",[])."
-	parsetree = prolog.query(query1)
-	print("PARSE TREE")
-	for sol in parsetree:
-		x=sol["P"]
-		print(x)
 	
-	return parsetree
+	query = "program(P,{},[])."
+	
+	parsetree = prolog.query(query.format(lex))
+	
+	return next(parsetree)["P"]
+	
 
-def give_semantics(parsetree):
-	x=""
-	for sol in parsetree:
-		x=sol["P"]
-	query2 = "program_eval("+x+",Z)"
-	ans = prolog.query(query2)
-	z=""
-	# for sol in ans:
-	# 	z=sol["Z"]
-	# 	print(sol["Z"])
+def give_semantics(parse_tree):
 
+	query = "program_eval({},Z)"
+	
+	Env = prolog.query(query.format(parse_tree))
+
+	print(next(Env)["Z"])
+
+
+def set_up_env():
+	import nltk
+	nltk.download('punkt')
+
+
+# set_up_env()
 prolog = Prolog()
 lex = lexer_job()
 parse_tree = create_parse_tree(lex)
