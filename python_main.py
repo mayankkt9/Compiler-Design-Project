@@ -44,10 +44,11 @@ def create_parse_tree(lex):
 	prolog.consult("semantics.pl")
 	query1 = "program(P,"+lex+",[])."
 	parsetree = prolog.query(query1)
+	print("PARSE TREE")
 	for sol in parsetree:
 		x=sol["P"]
-	print("PARSE TREE")
-	print(x)
+		print(x)
+	
 	return parsetree
 
 def give_semantics(parsetree):
