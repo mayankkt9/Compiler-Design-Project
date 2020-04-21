@@ -1,5 +1,6 @@
-:- use_rendering(svgtree).
+%:- use_rendering(svgtree).
 
+:- use_module(library(tabling)).
 :- table expr_op/3, term/3, bool/3.
 
 
@@ -20,8 +21,8 @@ brackets(X) --> ['('], expr(X), [')'].
 brackets(X) --> num(X).
 brackets(X) --> identifier(X).
 
-identifier(X) -->[X],{X \= true}, {X \= false}, {atom(X)}.
-num(X) --> [X], {number(X)}.
+identifier(t_id(X)) -->[X],{X \= true}, {X \= false}, {atom(X)}.
+num(t_num(X)) --> [X], {number(X)}.
 
 
 % 4 data types
@@ -60,15 +61,15 @@ ternary_op(t_ternary(X, Y, Z)) --> bool(X), [?], expr(Y), [:], expr(Z).
 declaration(t_declaration_bool_assign(X, Y)) --> [boolean], identifier(X), [=], bool(Y).
 declaration(t_declaration_str_assign(X, Y)) --> [string], identifier(X), [=], ['"'], [Y], ['"'].
 declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], expr(Y).
-declaration(t_declaration_num_assign(X, Y)) --> [int], identifier(X), [=], ternary_op(Y).
+declaration(t_declaration_num_assign_ternary(X, Y)) --> [int], identifier(X), [=], ternary_op(Y).
 declaration(t_declaration_num_assign(X, Y)) --> [float], identifier(X), [=], expr(Y).
-declaration(t_declaration_num_assign(X, Y)) --> [float], identifier(X), [=], ternary_op(Y).
+declaration(t_declaration_num_assign_ternary(X, Y)) --> [float], identifier(X), [=], ternary_op(Y).
 
 % Assignment statements
 assignment(t_assignment_bool(X, Y)) --> identifier(X), [=], bool(Y).
 assignment(t_assignment_str(X, Y)) --> identifier(X), [=], ['"'], [Y], ['"'].
 assignment(t_declaration_num_assign(X, Y)) --> identifier(X), [=], expr(Y).
-assignment(t_declaration_num_assign(X, Y)) --> identifier(X), [=], ternary_op(Y).
+assignment(t_declaration_num_assign_ternary(X, Y)) --> identifier(X), [=], ternary_op(Y).
 
 % Need to implement print statement
 printv(t_print_id(X)) --> [X].
